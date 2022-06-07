@@ -5,12 +5,16 @@ import io.github.techgnious.dto.ResizeResolution;
 import io.github.techgnious.dto.VideoFormats;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
+import org.springframework.util.ResourceUtils;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -22,16 +26,16 @@ public class MyRunner implements CommandLineRunner {
 
     private final IVCompressor compressor = new IVCompressor();
 
-    private final int NUMBER_OF_VIDEO = 2;
+    private final int NUMBER_OF_VIDEO = 1;
 
-    private final String inputFilePath = "D:\\a\\1080p_video.mp4";
     private final String outputPath = "D:\\";
 
     @Override
     public void run(String... args) throws Exception {
-        Path path = Paths.get(inputFilePath);
+        File file = ResourceUtils.getFile("classpath:video/1080p_video.mp4");
+        FileInputStream is = new FileInputStream(file);
 
-        byte[] in = Files.readAllBytes(path);
+        byte[] in = is.readAllBytes();
 
         List<Runnable> listTask = new ArrayList<>();
 
@@ -49,11 +53,11 @@ public class MyRunner implements CommandLineRunner {
 
     private void convertAndSave(byte[] file, String outputPath) {
         try {
-            System.out.println("- Start : " + outputPath);
+            System.out.println("- Start : " + outputPath + " at " + new Date());
             byte[] out = compressor.reduceVideoSize(file, VideoFormats.MP4, ResizeResolution.R720P);
             Path outPath = Paths.get(outputPath);
             Files.write(outPath, out);
-            System.out.println("- Done : " + outputPath);
+            System.out.println("- Done : " + outputPath + " at " + new Date());
         } catch (Exception e) {
             e.printStackTrace();
         }
