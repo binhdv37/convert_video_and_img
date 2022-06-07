@@ -13,7 +13,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -24,9 +23,7 @@ public class MyRunner implements CommandLineRunner {
 
     private final ExecutorService executorService = Executors.newFixedThreadPool(100);
 
-    private final IVCompressor compressor = new IVCompressor();
-
-    private final int NUMBER_OF_VIDEO = 1;
+    private final int NUMBER_OF_VIDEO = 10;
 
     private final String outputPath = "D:\\";
 
@@ -53,6 +50,7 @@ public class MyRunner implements CommandLineRunner {
 
     private void convertAndSave(byte[] file, String outputPath) {
         try {
+            IVCompressor compressor = new IVCompressor();
             System.out.println("- Start : " + outputPath + " at " + new Date());
             byte[] out = compressor.reduceVideoSize(file, VideoFormats.MP4, ResizeResolution.R720P);
             Path outPath = Paths.get(outputPath);
