@@ -3,16 +3,22 @@ package com.example.convert_img_video.component;
 import io.github.techgnious.IVCompressor;
 import io.github.techgnious.dto.ResizeResolution;
 import io.github.techgnious.dto.VideoFormats;
+import org.mp4parser.Box;
+import org.mp4parser.IsoFile;
+import org.mp4parser.boxes.iso14496.part12.MovieBox;
+import org.mp4parser.boxes.iso14496.part12.TrackBox;
+import org.mp4parser.boxes.iso14496.part12.TrackHeaderBox;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ResourceUtils;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
+import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -29,23 +35,25 @@ public class MyRunner implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        File file = ResourceUtils.getFile("classpath:video/1080p_video.mp4");
-        FileInputStream is = new FileInputStream(file);
+        extractVideoFile();
 
-        byte[] in = is.readAllBytes();
-
-        List<Runnable> listTask = new ArrayList<>();
-
-        for (int i = 0; i < NUMBER_OF_VIDEO; i++) {
-            String outputPath = this.outputPath + i + ".mp4";
-            byte[] tmp = in.clone();
-            listTask.add(() -> convertAndSave(tmp, outputPath));
-        }
-
-        System.out.println("- Start convert " + NUMBER_OF_VIDEO + " video");
-
-        // execute
-        listTask.forEach(executorService::execute);
+//        File file = ResourceUtils.getFile("classpath:video/1080p_video.mp4");
+//        FileInputStream is = new FileInputStream(file);
+//
+//        byte[] in = is.readAllBytes();
+//
+//        List<Runnable> listTask = new ArrayList<>();
+//
+//        for (int i = 0; i < NUMBER_OF_VIDEO; i++) {
+//            String outputPath = this.outputPath + i + ".mp4";
+//            byte[] tmp = in.clone();
+//            listTask.add(() -> convertAndSave(tmp, outputPath));
+//        }
+//
+//        System.out.println("- Start convert " + NUMBER_OF_VIDEO + " video");
+//
+//        // execute
+//        listTask.forEach(executorService::execute);
     }
 
     private void convertAndSave(byte[] file, String outputPath) {
@@ -60,5 +68,28 @@ public class MyRunner implements CommandLineRunner {
             e.printStackTrace();
         }
     }
+
+    private void extractVideoFile() throws IOException {
+        File file = ResourceUtils.getFile("classpath:video/1080p_video.mp4");
+        FileChannel fc = new FileInputStream(file).getChannel();
+        IsoFile isoFile = new IsoFile(fc);
+        MovieBox moov = isoFile.getMovieBox();
+        for (Box box : moov.getBoxes()) {
+            if (box instanceof TrackBox) {
+                TrackBox trackBox = (TrackBox) box;
+                List<Box> boxes = trackBox.getBoxes();
+                for (Box b : boxes) {
+                    if (b instanceof TrackHeaderBox) {
+                        TrackHeaderBox trackHeaderBox = (TrackHeaderBox) b;
+                        System.out.println("Height: " + trackHeaderBox.getHeight());
+                        System.out.println("Width: " + trackHeaderBox.getWidth());
+                        break;
+                    }
+                }
+                break;
+            }
+        }
+    }
+
 
 }
